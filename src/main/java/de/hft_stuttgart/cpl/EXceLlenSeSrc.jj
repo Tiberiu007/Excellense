@@ -1,0 +1,132 @@
+options
+        {
+        IGNORE_CASE = true;
+        STATIC = false;
+        }
+PARSER_BEGIN(EXceLlenSe)
+package de.hft_stuttgart.cpl;
+public class EXceLlenSe
+{
+    public static void main(String args[]) throws ParseException, IOException
+    {
+        String input = new BufferedReader(new InputStreamReader(System.in)).readLine();
+        while (!input.equals("exit")) {
+            try {
+                EXceLlenSe parser = new EXceLlenSe(new StringReader(input));
+                parser.program();
+                System.out.println("Parsing successful!");
+            } catch (ParseException e) {
+                System.out.println("Parsing error: " + e.getMessage());
+            }
+            input = new BufferedReader(new InputStreamReader(System.in)).readLine();
+        }
+    }
+}
+    PARSER_END(EXceLlenSe)
+SKIP:
+        {
+        " "
+        |   "\r"
+        |   "\t"
+        }
+TOKEN:
+        {
+          < EQ: "=" >
+        | < FORMATTED: "FORMATTED" >
+        | < FOR: "for" >
+        | < FROM: "from" >
+        | < TO: "to" >
+        | < DO: "do" >
+        | < END: "end" >
+        | < FUNCTION: "func" >
+        | < CONCAT: "&" >
+        | < ADD: "+" >
+        | < SUB: "-" >
+        | < MOD: "%" >
+        | < DIV: "/" >
+        | < MUL: "*" >
+        | < DECIMAL_LITERAL: ("+" | "-")? (["1"-"9"])(["0"-"9"])* >
+        | < FLOAT_LITERAL_1: ("+" | "-")? (["0"-"9"])+ ("E" ("+" | "-")? (["0"-"9"])+) >
+        | < FLOAT_LITERAL_2: ("+" | "-")? "." (["0"-"9"])+ ("E" ("+" | "-")? (["0"-"9"])+)? >
+        | < FLOAT_LITERAL_3: ("+" | "-")? (["0"-"9"])+ "." (["0"-"9"])* ("E" ("+" | "-")? (["0"-"9"])+)? >
+        | < STRING_LITERAL: "'" ("''" | ~["'"])* "'" >
+        | < TIMESTAMP_LITERAL: "{" ["0"-"9"] ["0"-"9"] ["0"-"9"] ["0"-"9"] "-" ["0"-"9"] ["0"-"9"] "-" ["0"-"9"] ["0"-"9"] " " ["0"-"9"] ["0"-"9"] ":" ["0"-"9"] ["0"-"9"] ":" ["0"-"9"] ["0"-"9"] "}">
+        | < VARIABLE: ("i" | "j" | "k" | "l" | "m" | "n") >
+        | < COMP_OP: ("<" | "<=" | "=" | ">=" | ">" | "<>") >
+        }
+
+        void program():
+        {} {
+            (statement())* <EOF>
+        }
+        void statement():
+        {} {
+            assignment() | forLoop()
+        }
+
+        void cellReference():
+        {} {
+            "C" numberExpression() "R" numberExpression()
+        }
+
+        void assignment():
+        {} {
+            cellReference() <EQ> expression() [ <FORMATTED> stringExpression() ]
+        }
+
+        void forLoop():
+        {} {
+            <FOR> <VARIABLE> <FROM> expression() <TO> expression() <DO> assignment() <END>
+        }
+
+        void expression():
+        {} {
+             LOOKAHEAD(3) numberExpression() ( <COMP_OP> numberExpression() )* | LOOKAHEAD(3) timestampExpression() ( <COMP_OP> timestampExpression() )* | LOOKAHEAD(3) stringExpression() ( <COMP_OP> stringExpression() )*
+        }
+
+
+        void numberExpression():
+        {} {
+            term() ( <ADD> term() | <SUB> term() )* | functionCall() | <TIMESTAMP_LITERAL> <SUB> <TIMESTAMP_LITERAL>
+        }
+
+        void term():
+        {} {
+            factor() ( <MUL> factor() | <DIV> factor() | <MOD> factor() )*
+        }
+
+        void factor():
+        {} {
+            <DECIMAL_LITERAL> | <FLOAT_LITERAL_1> | <FLOAT_LITERAL_2> | <FLOAT_LITERAL_3> | "(" numberExpression() ")"
+        }
+
+
+        void functionCall():
+        {} {
+            <FUNCTION> "(" expression() ")"
+        }
+
+        void timestampExpression():
+        {} {
+            LOOKAHEAD(3) <TIMESTAMP_LITERAL> <ADD> numberExpression() | LOOKAHEAD(3) <TIMESTAMP_LITERAL> <SUB> numberExpression()
+        }
+
+        void stringExpression():
+        {} {
+            <STRING_LITERAL> ( <CONCAT> <STRING_LITERAL> )* | cellReference() <CONCAT> stringExpression()
+        }
+
+
+//        void booleanExpression():
+//        {} {
+//            LOOKAHEAD(3) numberExpression() <COMP_OP> numberExpression() | stringExpression() <COMP_OP> stringExpression() | LOOKAHEAD(3) timestampExpression() <COMP_OP> timestampExpression()
+//        }
+
+
+
+
+
+
+
+
+
