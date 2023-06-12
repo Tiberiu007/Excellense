@@ -10,6 +10,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.HashMap;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 public class EXceLlenSe
 {
@@ -140,6 +143,8 @@ TOKEN:
          String secondTerm = "";
          String op = "";
          String res = "";
+         String timeStamp1 = "";
+         String timeStamp2 = "";
         }
         {
             firstTerm = term()
@@ -164,7 +169,21 @@ TOKEN:
                 return firstTerm;
               }
               | functionCall()
-//            | <TIMESTAMP_LITERAL> <SUB> <TIMESTAMP_LITERAL>
+              |
+              timeStamp1 = <TIMESTAMP_LITERAL>.image
+              <SUB>
+              timeStamp2 = <TIMESTAMP_LITERAL>.image
+              {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                timeStamp1 = timeStamp1.replace("{", "");
+                timeStamp1 = timeStamp1.replace("}", "");
+                timeStamp2 = timeStamp2.replace("{", "");
+                timeStamp2 = timeStamp2.replace("}", "");
+                LocalDateTime dateTime1 = LocalDateTime.parse(timeStamp1, formatter);
+                LocalDateTime dateTime2 = LocalDateTime.parse(timeStamp2, formatter);
+                Duration duration = Duration.between(dateTime1, dateTime2);
+                return Long.toString(duration.getSeconds());
+              }
         }
 
         String term():
@@ -225,7 +244,6 @@ TOKEN:
              }
             |
             literal = <FLOAT_LITERAL_3>.image
-//            | "(" numberExpression() ")"
             {
                 return literal;
             }
