@@ -5,16 +5,37 @@ options
         }
 PARSER_BEGIN(EXceLlenSe)
 package de.hft_stuttgart.cpl;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.util.HashMap;
+import java.util.Map;
 public class EXceLlenSe
 {
+    private static Map<String, String> cellReferenceValues;
+
+    private static String convertToString(double value) {
+        if (value == (long) value) {
+            return String.format("%d", (long) value);
+        } else {
+            return String.format("%s", value);
+        }
+    }
+
     public static void main(String args[]) throws ParseException, IOException
     {
         String input = new BufferedReader(new InputStreamReader(System.in)).readLine();
         while (!input.equals("exit")) {
             try {
+                cellReferenceValues = new HashMap<>();
                 EXceLlenSe parser = new EXceLlenSe(new StringReader(input));
                 parser.program();
                 System.out.println("Parsing successful!");
+                System.out.println("Dump Variables: ");
+                for (String key : cellReferenceValues.keySet()) {
+                    System.out.println(key + " = " + cellReferenceValues.get(key));
+                }
             } catch (ParseException e) {
                 System.out.println("Parsing error: " + e.getMessage());
             }
@@ -64,14 +85,42 @@ TOKEN:
             assignment() | forLoop()
         }
 
-        void cellReference():
-        {} {
-            "C" numberExpression() "R" numberExpression()
+        String cellReference():
+        {
+            String exprColumn;
+            String exprRow;
+} {
+              {
+                exprColumn = "";
+                exprRow = "";
+              }
+            "C"
+            exprColumn = numberExpression()
+            "R"
+            exprRow = numberExpression()
+            {
+             return "C" + exprColumn + "R" + exprRow;
+}
         }
 
         void assignment():
-        {} {
-            cellReference() <EQ> expression() [ <FORMATTED> stringExpression() ]
+        {
+            String reference;
+            String expression;
+            Token equal_sign;
+                } {
+          {
+            reference = "";
+            expression = "";
+           }
+            reference = cellReference()
+            <EQ>
+//            expression = expression()
+             expression()
+            [ <FORMATTED> stringExpression() ]
+            {
+                cellReferenceValues.put(reference, "EXPRESSION HARDCODED");
+            }
         }
 
         void forLoop():
@@ -85,19 +134,101 @@ TOKEN:
         }
 
 
-        void numberExpression():
-        {} {
-            term() ( <ADD> term() | <SUB> term() )* | functionCall() | <TIMESTAMP_LITERAL> <SUB> <TIMESTAMP_LITERAL>
+        String numberExpression():
+        {
+         String firstTerm = "";
+         String secondTerm = "";
+         String op = "";
+         String res = "";
+        }
+        {
+            firstTerm = term()
+            (
+            op = <ADD>.image
+            secondTerm = term()
+                 {
+                    Double firstTermDouble = Double.parseDouble(firstTerm);
+                    Double secondTermDouble = Double.parseDouble(secondTerm);
+                    firstTerm = convertToString(firstTermDouble + secondTermDouble);
+                 }
+            |
+            op = <SUB>.image
+            secondTerm = term()
+                 {
+                    Double firstTermDouble = Double.parseDouble(firstTerm);
+                    Double secondTermDouble = Double.parseDouble(secondTerm);
+                    firstTerm = convertToString(firstTermDouble + secondTermDouble);
+                 }
+            )*
+             {
+                return firstTerm;
+              }
+              | functionCall()
+//            | <TIMESTAMP_LITERAL> <SUB> <TIMESTAMP_LITERAL>
         }
 
-        void term():
-        {} {
-            factor() ( <MUL> factor() | <DIV> factor() | <MOD> factor() )*
+        String term():
+        {
+         String firstFactor = "";
+         String secondFactor = "";
+         String op = "";
+         String res = "";
+         } {
+            firstFactor = factor()
+            (
+            op = <MUL>.image
+            secondFactor = factor()
+             {
+                Double firstFactorDouble = Double.parseDouble(firstFactor);
+                Double secondFactorDouble = Double.parseDouble(secondFactor);
+                firstFactor = convertToString(firstFactorDouble * secondFactorDouble);
+             }
+            |
+            op = <DIV>.image
+            secondFactor = factor()
+             {
+                Double firstFactorDouble = Double.parseDouble(firstFactor);
+                Double secondFactorDouble = Double.parseDouble(secondFactor);
+                firstFactor = convertToString(firstFactorDouble / secondFactorDouble);
+            }
+            |
+            op = <MOD>.image
+            secondFactor = factor()
+             {
+                Double firstFactorDouble = Double.parseDouble(firstFactor);
+                Double secondFactorDouble = Double.parseDouble(secondFactor);
+                firstFactor = convertToString(firstFactorDouble % secondFactorDouble);
+            }
+            )*
+            {
+            return firstFactor;
+            }
         }
 
-        void factor():
-        {} {
-            <DECIMAL_LITERAL> | <FLOAT_LITERAL_1> | <FLOAT_LITERAL_2> | <FLOAT_LITERAL_3> | "(" numberExpression() ")"
+        String factor():
+        {
+         String literal = "";
+         } {
+            literal = <DECIMAL_LITERAL>.image
+             {
+                return literal;
+             }
+            |
+            literal = <FLOAT_LITERAL_1>.image
+             {
+                 return literal;
+             }
+            |
+            literal = <FLOAT_LITERAL_2>.image
+             {
+                 return literal;
+             }
+            |
+            literal = <FLOAT_LITERAL_3>.image
+//            | "(" numberExpression() ")"
+            {
+                return literal;
+            }
         }
 
 
@@ -115,12 +246,6 @@ TOKEN:
         {} {
             <STRING_LITERAL> ( <CONCAT> <STRING_LITERAL> )* | cellReference() <CONCAT> stringExpression()
         }
-
-
-//        void booleanExpression():
-//        {} {
-//            LOOKAHEAD(3) numberExpression() <COMP_OP> numberExpression() | stringExpression() <COMP_OP> stringExpression() | LOOKAHEAD(3) timestampExpression() <COMP_OP> timestampExpression()
-//        }
 
 
 
