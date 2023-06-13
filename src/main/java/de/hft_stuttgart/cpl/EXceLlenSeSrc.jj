@@ -67,7 +67,7 @@ TOKEN:
         | < TO: "to" >
         | < DO: "do" >
         | < END: "end" >
-        | < FUNCTION: "func" >
+        | < FUNCTION: "countFunc" >
         | < CONCAT: "&" >
         | < ADD: "+" >
         | < SUB: "-" >
@@ -194,7 +194,10 @@ TOKEN:
              {
                 return firstTerm;
               }
-              | functionCall()
+              | res = functionCall()
+              {
+                return res;
+              }
               |
               timeStamp1 = <TIMESTAMP_LITERAL>.image
               <SUB>
@@ -376,10 +379,32 @@ TOKEN:
             }
         }
 
+        String argsList():
+        {
+         int count = 1;
+         } {
+            <DECIMAL_LITERAL>
+            (
+                ","
+                <DECIMAL_LITERAL>
+                {
+                    count++;
+                }
+            )*
+            {
+                return Integer.toString(count);
+            }
+        }
 
-        void functionCall():
-        {} {
-            <FUNCTION> "(" expression() ")"
+        String functionCall():
+        {String res = "";} {
+            <FUNCTION>
+            "("
+            res = argsList()
+            ")"
+            {
+             return res;
+            }
         }
 
         String timestampExpression():

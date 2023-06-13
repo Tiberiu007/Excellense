@@ -74,7 +74,7 @@ public interface EXceLlenSeConstants {
     "\"to\"",
     "\"do\"",
     "\"end\"",
-    "\"func\"",
+    "\"countFunc\"",
     "\"&\"",
     "\"+\"",
     "\"-\"",
@@ -92,6 +92,7 @@ public interface EXceLlenSeConstants {
     "\"exit\"",
     "\"C\"",
     "\"R\"",
+    "\",\"",
     "\"(\"",
     "\")\"",
   };
