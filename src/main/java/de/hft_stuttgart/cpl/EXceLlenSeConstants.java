@@ -11,49 +11,51 @@ public interface EXceLlenSeConstants {
   /** End of File. */
   int EOF = 0;
   /** RegularExpression Id. */
-  int EQ = 4;
+  int EQ = 5;
   /** RegularExpression Id. */
-  int FORMATTED = 5;
+  int FORMATTED = 6;
   /** RegularExpression Id. */
-  int FOR = 6;
+  int FOR = 7;
   /** RegularExpression Id. */
-  int FROM = 7;
+  int FROM = 8;
   /** RegularExpression Id. */
-  int TO = 8;
+  int TO = 9;
   /** RegularExpression Id. */
-  int DO = 9;
+  int DO = 10;
   /** RegularExpression Id. */
-  int END = 10;
+  int END = 11;
   /** RegularExpression Id. */
-  int FUNCTION = 11;
+  int FUNCTION = 12;
   /** RegularExpression Id. */
-  int CONCAT = 12;
+  int CONCAT = 13;
   /** RegularExpression Id. */
-  int ADD = 13;
+  int ADD = 14;
   /** RegularExpression Id. */
-  int SUB = 14;
+  int SUB = 15;
   /** RegularExpression Id. */
-  int MOD = 15;
+  int MOD = 16;
   /** RegularExpression Id. */
-  int DIV = 16;
+  int DIV = 17;
   /** RegularExpression Id. */
-  int MUL = 17;
+  int MUL = 18;
   /** RegularExpression Id. */
-  int DECIMAL_LITERAL = 18;
+  int DECIMAL_LITERAL = 19;
   /** RegularExpression Id. */
-  int FLOAT_LITERAL_1 = 19;
+  int FLOAT_LITERAL_1 = 20;
   /** RegularExpression Id. */
-  int FLOAT_LITERAL_2 = 20;
+  int FLOAT_LITERAL_2 = 21;
   /** RegularExpression Id. */
-  int FLOAT_LITERAL_3 = 21;
+  int FLOAT_LITERAL_3 = 22;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 22;
+  int STRING_LITERAL = 23;
   /** RegularExpression Id. */
-  int TIMESTAMP_LITERAL = 23;
+  int TIMESTAMP_LITERAL = 24;
   /** RegularExpression Id. */
-  int VARIABLE = 24;
+  int VARIABLE = 25;
   /** RegularExpression Id. */
-  int COMP_OP = 25;
+  int COMP_OP = 26;
+  /** RegularExpression Id. */
+  int FINISH = 27;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -64,6 +66,7 @@ public interface EXceLlenSeConstants {
     "\" \"",
     "\"\\r\"",
     "\"\\t\"",
+    "\"\\n\"",
     "\"=\"",
     "\"FORMATTED\"",
     "\"for\"",
@@ -86,6 +89,7 @@ public interface EXceLlenSeConstants {
     "<TIMESTAMP_LITERAL>",
     "<VARIABLE>",
     "<COMP_OP>",
+    "\"exit\"",
     "\"C\"",
     "\"R\"",
     "\"(\"",

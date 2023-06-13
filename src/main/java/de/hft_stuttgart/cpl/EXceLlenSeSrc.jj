@@ -26,13 +26,19 @@ public class EXceLlenSe
         }
     }
 
+    private static String convertToString(boolean value) {
+        if (value) {
+            return "TRUE";
+        } else {
+            return "FALSE";
+        }
+    }
+
     public static void main(String args[]) throws ParseException, IOException
     {
-        String input = new BufferedReader(new InputStreamReader(System.in)).readLine();
-        while (!input.equals("exit")) {
             try {
                 cellReferenceValues = new HashMap<>();
-                EXceLlenSe parser = new EXceLlenSe(new StringReader(input));
+                EXceLlenSe parser = new EXceLlenSe(System.in);
                 parser.program();
                 System.out.println("Parsing successful!");
                 System.out.println("Dump Variables: ");
@@ -42,8 +48,6 @@ public class EXceLlenSe
             } catch (ParseException e) {
                 System.out.println("Parsing error: " + e.getMessage());
             }
-            input = new BufferedReader(new InputStreamReader(System.in)).readLine();
-        }
     }
 }
     PARSER_END(EXceLlenSe)
@@ -52,6 +56,7 @@ SKIP:
         " "
         |   "\r"
         |   "\t"
+        |   "\n"
         }
 TOKEN:
         {
@@ -77,11 +82,12 @@ TOKEN:
         | < TIMESTAMP_LITERAL: "{" ["0"-"9"] ["0"-"9"] ["0"-"9"] ["0"-"9"] "-" ["0"-"9"] ["0"-"9"] "-" ["0"-"9"] ["0"-"9"] " " ["0"-"9"] ["0"-"9"] ":" ["0"-"9"] ["0"-"9"] ":" ["0"-"9"] ["0"-"9"] "}">
         | < VARIABLE: ("i" | "j" | "k" | "l" | "m" | "n") >
         | < COMP_OP: ("<" | "<=" | "=" | ">=" | ">" | "<>") >
+        | < FINISH: "exit" >
         }
 
         void program():
         {} {
-            (statement())* <EOF>
+            (statement())* <FINISH>
         }
         void statement():
         {} {
@@ -118,11 +124,10 @@ TOKEN:
            }
             reference = cellReference()
             <EQ>
-//            expression = expression()
-             expression()
+            expression = expression()
             [ <FORMATTED> stringExpression() ]
             {
-                cellReferenceValues.put(reference, "EXPRESSION HARDCODED");
+                cellReferenceValues.put(reference, expression);
             }
         }
 
@@ -131,9 +136,30 @@ TOKEN:
             <FOR> <VARIABLE> <FROM> expression() <TO> expression() <DO> assignment() <END>
         }
 
-        void expression():
-        {} {
-             LOOKAHEAD(3) numberExpression() ( <COMP_OP> numberExpression() )* | LOOKAHEAD(3) timestampExpression() ( <COMP_OP> timestampExpression() )* | LOOKAHEAD(3) stringExpression() ( <COMP_OP> stringExpression() )*
+        String expression():
+        {
+            String output = "";
+        } {
+
+             LOOKAHEAD(12) output = booleanExpression()
+              {
+                return output;
+              }
+              |
+             LOOKAHEAD(6) output = numberExpression()
+                {
+                    return output;
+                }
+              |
+             LOOKAHEAD(6) output = timestampExpression()
+             {
+                return output;
+             }
+             |
+           LOOKAHEAD(12) output = stringExpression()
+             {
+                 return output;
+             }
         }
 
 
@@ -162,7 +188,7 @@ TOKEN:
                  {
                     Double firstTermDouble = Double.parseDouble(firstTerm);
                     Double secondTermDouble = Double.parseDouble(secondTerm);
-                    firstTerm = convertToString(firstTermDouble + secondTermDouble);
+                    firstTerm = convertToString(firstTermDouble - secondTermDouble);
                  }
             )*
              {
@@ -185,6 +211,107 @@ TOKEN:
                 return Long.toString(duration.getSeconds());
               }
         }
+
+                String booleanExpression():
+                {
+                String firstTerm = "";
+                String secondTerm = "";
+                String op = "";
+                String res = "";
+                String timeStamp1 = "";
+                String timeStamp2 = "";
+                }
+                {
+                LOOKAHEAD(3) firstTerm = numberExpression()
+                op = <COMP_OP>.image
+                secondTerm = numberExpression()
+                {
+                    Double firstTermDouble = Double.parseDouble(firstTerm);
+                    Double secondTermDouble = Double.parseDouble(secondTerm);
+                    switch (op) {
+                        case "<":
+                            res = convertToString(firstTermDouble < secondTermDouble);
+                            break;
+                        case "<=":
+                            res = convertToString(firstTermDouble <= secondTermDouble);
+                            break;
+                        case "=":
+                            res = convertToString(firstTermDouble.equals(secondTermDouble));
+                            break;
+                        case ">=":
+                            res = convertToString(firstTermDouble >= secondTermDouble);
+                            break;
+                        case ">":
+                            res = convertToString(firstTermDouble > secondTermDouble);
+                            break;
+                        case "<>":
+                            res = convertToString(!firstTermDouble.equals(secondTermDouble));
+                            break;
+                    }
+                    return res;
+                }
+                |
+                LOOKAHEAD(3) timeStamp1 = <TIMESTAMP_LITERAL>.image
+                op = <COMP_OP>.image
+                timeStamp2 = <TIMESTAMP_LITERAL>.image
+                {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                    timeStamp1 = timeStamp1.replace("{", "");
+                    timeStamp1 = timeStamp1.replace("}", "");
+                    timeStamp2 = timeStamp2.replace("{", "");
+                    timeStamp2 = timeStamp2.replace("}", "");
+                    LocalDateTime dateTime1 = LocalDateTime.parse(timeStamp1, formatter);
+                    LocalDateTime dateTime2 = LocalDateTime.parse(timeStamp2, formatter);
+                    switch (op) {
+                        case "<":
+                            res = convertToString(dateTime1.isBefore(dateTime2));
+                            break;
+                        case "<=":
+                            res = convertToString(dateTime1.isBefore(dateTime2) || dateTime1.isEqual(dateTime2));
+                            break;
+                        case "=":
+                            res = convertToString(dateTime1.isEqual(dateTime2));
+                            break;
+                        case ">=":
+                            res = convertToString(dateTime1.isAfter(dateTime2) || dateTime1.isEqual(dateTime2));
+                            break;
+                        case ">":
+                            res = convertToString(dateTime1.isAfter(dateTime2));
+                            break;
+                        case "<>":
+                            res = convertToString(!dateTime1.isEqual(dateTime2));
+                            break;
+                    }
+                    return res;
+                }
+                |
+                LOOKAHEAD(3) firstTerm = stringExpression()
+                op = <COMP_OP>.image
+                secondTerm = stringExpression()
+                {
+                    switch (op) {
+                        case "<":
+                            res = convertToString(firstTerm.compareTo(secondTerm) < 0);
+                            break;
+                        case "<=":
+                            res = convertToString(firstTerm.compareTo(secondTerm) <= 0);
+                            break;
+                        case "=":
+                            res = convertToString(firstTerm.compareTo(secondTerm) == 0);
+                            break;
+                        case ">=":
+                            res = convertToString(firstTerm.compareTo(secondTerm) >= 0);
+                            break;
+                        case ">":
+                            res = convertToString(firstTerm.compareTo(secondTerm) > 0);
+                            break;
+                        case "<>":
+                            res = convertToString(firstTerm.compareTo(secondTerm) != 0);
+                            break;
+                    }
+                    return res;
+                }
+            }
 
         String term():
         {
@@ -255,14 +382,72 @@ TOKEN:
             <FUNCTION> "(" expression() ")"
         }
 
-        void timestampExpression():
-        {} {
-            LOOKAHEAD(3) <TIMESTAMP_LITERAL> <ADD> numberExpression() | LOOKAHEAD(3) <TIMESTAMP_LITERAL> <SUB> numberExpression()
+        String timestampExpression():
+        {
+         String timestamp = "";
+         String op = "";
+         String number = "";
+} {
+            LOOKAHEAD(3)
+            timestamp = <TIMESTAMP_LITERAL>.image
+             op = <ADD>.image
+            number = numberExpression()
+            {
+                timestamp = timestamp.replace("{", "");
+                timestamp = timestamp.replace("}", "");
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                LocalDateTime dateTime = LocalDateTime.parse(timestamp, formatter);
+                dateTime = dateTime.plusSeconds(Long.parseLong(number));
+                return dateTime.toString();
+            }
+              |
+             LOOKAHEAD(3)
+             timestamp = <TIMESTAMP_LITERAL>.image
+              op = <SUB>.image
+             number = numberExpression()
+             {
+                timestamp = timestamp.replace("{", "");
+                timestamp = timestamp.replace("}", "");
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                LocalDateTime dateTime = LocalDateTime.parse(timestamp, formatter);
+                dateTime = dateTime.minusSeconds(Long.parseLong(number));
+                return dateTime.toString();
+             }
         }
 
-        void stringExpression():
-        {} {
-            <STRING_LITERAL> ( <CONCAT> <STRING_LITERAL> )* | cellReference() <CONCAT> stringExpression()
+        String stringExpression():
+        {
+            String currentLiteral = "";
+            String ampresandSign = "";
+            String concatLiteral = "";
+            String cellRef = "";
+            String stringExpr = "";
+            String cellRefValue = "";
+} {
+            currentLiteral = <STRING_LITERAL>.image
+             (
+              ampresandSign = <CONCAT>.image
+              concatLiteral = <STRING_LITERAL>.image
+              {
+                currentLiteral = currentLiteral.replace("\'", "");
+                concatLiteral = concatLiteral.replace("\'", "");
+                currentLiteral = currentLiteral + " " + concatLiteral;
+              }
+              )*
+              {
+                currentLiteral = currentLiteral.replace("\'", "");
+                return currentLiteral;
+                }
+            |
+            cellRef = cellReference()
+            concatLiteral = <CONCAT>.image
+            stringExpr = stringExpression()
+            {
+                cellRefValue = cellReferenceValues.get(cellRef);
+                cellRefValue = cellRefValue + " " + stringExpr;
+                cellRefValue = cellRefValue.replace("\'", "");
+                return cellRefValue;
+            }
         }
 
 
