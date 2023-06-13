@@ -212,7 +212,7 @@ DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                 LocalDateTime dateTime1 = LocalDateTime.parse(timeStamp1, formatter);
                 LocalDateTime dateTime2 = LocalDateTime.parse(timeStamp2, formatter);
                 Duration duration = Duration.between(dateTime1, dateTime2);
-                {if ("" != null) return Long.toString(duration.getSeconds());}
+                {if ("" != null) return Long.toString(duration.getSeconds() * -1);}
       break;
       }
     default:
