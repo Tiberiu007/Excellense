@@ -14,17 +14,17 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import java.lang.String;
+import java.util.List;
+import java.util.ArrayList;
 public class EXceLlenSe
 {
     private static Map<String, String> cellReferenceValues;
-    private static int currentLoopVariableValue = 0;
-    private static Boolean isInForLoop = false;
     private static CurrentLoop currentLoop = null;
 
     private class CurrentLoop{
         public int loopStart;
         public int loopEnd;
-        public int currentLoopVar;
     }
 
     private static String convertToString(double value) {
@@ -103,58 +103,50 @@ TOKEN:
             assignment() | forLoop()
         }
 
-        String cellReference():
+        List<String> cellReference():
         {
-            String exprColumn;
-            String exprRow;
+            List<String> exprColumn = new ArrayList<String>();
+            List<String> exprRow = new ArrayList<String>();
+            List<String> res = new ArrayList<String>();
 } {
-              {
-                exprColumn = "";
-                exprRow = "";
-              }
             "C"
             exprColumn = numberExpression()
             "R"
             exprRow = numberExpression()
             {
-             return "C" + exprColumn + "R" + exprRow;
-}
+                 if(currentLoop != null)
+                 {
+                     for (int i = currentLoop.loopStart; i < currentLoop.loopEnd; i++)
+                      {
+                          String resultCell = "C" + exprColumn.get(i) + "R" + exprRow.get(i);
+                          res.add(resultCell);
+                      }
+
+                 }
+                 else
+                 {
+                     res.add("C" + exprColumn.get(0) + "R" + exprRow.get(0));
+                 }
+
+                 return res;
+            }
         }
 
 void assignment():
-{
-    String reference;
-    String expression;
-    Token equal_sign;
-}
-{
-    {
-        reference = "";
-        expression = "";
-    }
-    {
-        if (currentLoop != null) {
-            for (int i = currentLoop.loopStart; i < currentLoop.loopEnd; i++) {
-                currentLoop.currentLoopVar = i;
-                reference = cellReference();
-                <EQ>;
-                expression = expression();
-                [ <FORMATTED> stringExpression() ];
-                {
-                    cellReferenceValues.put(reference, expression);
+        {
+            List<String> references;
+            List<String> expressionValues;
                 }
-            }
-        } else {
-            reference = cellReference();
-            <EQ>;
-            expression = expression();
-            [ <FORMATTED> stringExpression() ];
+          {
+            references = cellReference()
+            <EQ>
+            expressionValues = expression()
+            [ <FORMATTED> stringExpression() ]
             {
-                cellReferenceValues.put(reference, expression);
+                for (int i = 0; i < references.size(); i++)
+                    cellReferenceValues.put(references.get(i), expressionValues.get(i));
             }
         }
-    }
-}
 
 
         void forLoop():
@@ -162,9 +154,8 @@ void assignment():
             {
                 currentLoop = new CurrentLoop();
             }
-            <FOR> <VARIABLE> <FROM> {currentLoop.loopStart = expression();} <TO> {currentLoop.loopEnd = expression();} <DO>
+            <FOR> <VARIABLE> <FROM> {currentLoop.loopStart = Integer.parseInt(expression().get(0));} <TO> {currentLoop.loopEnd = Integer.parseInt(expression().get(0));} <DO>
             {
-                currentLoopVariableValue = currentLoop.loopStart;
                 assignment();
             }
             <END>
@@ -173,65 +164,82 @@ void assignment():
             }
         }
 
-        String expression():
+        List<String> expression():
         {
             String output = "";
+            List<String> outputList = new ArrayList<String>();
         } {
                  LOOKAHEAD(12) output = booleanExpression()
                   {
-                    return output;
+                    outputList.add(output);
+                    return outputList;
                   }
                   |
-                 LOOKAHEAD(6) output = numberExpression()
+                 LOOKAHEAD(6) outputList = numberExpression()
                     {
-                        return output;
+                        return outputList;
                     }
                   |
                  LOOKAHEAD(6) output = timestampExpression()
                  {
-                    return output;
+                    outputList.add(output);
+                    return outputList;
                  }
                  |
-               LOOKAHEAD(12) output = stringExpression()
+               LOOKAHEAD(12) outputList = stringExpression()
                  {
-                     return output;
+                     return outputList;
                  }
         }
 
 
-        String numberExpression():
+        List<String> numberExpression():
         {
-         String firstTerm = "";
-         String secondTerm = "";
+         List<String> firstTerm = new ArrayList<String>();
+         List<String> secondTerm = new ArrayList<String>();
+         List<String> res = new ArrayList<String>();
+         String funcCallRes = "";
          String op = "";
-         String res = "";
          String timeStamp1 = "";
          String timeStamp2 = "";
         }
         {
             firstTerm = term()
+            {
+                for (int i = 0; i < firstTerm.size(); i++)
+                {
+                    res.add(firstTerm.get(i));
+                }
+            }
             (
             op = <ADD>.image
             secondTerm = term()
                  {
-                    Double firstTermDouble = Double.parseDouble(firstTerm);
-                    Double secondTermDouble = Double.parseDouble(secondTerm);
-                    firstTerm = convertToString(firstTermDouble + secondTermDouble);
+                    for (int i = 0; i < firstTerm.size(); i++){
+                        Double firstTermDouble = Double.parseDouble(firstTerm.get(i));
+                        Double secondTermDouble = Double.parseDouble(secondTerm.get(i));
+                        String calcRes = convertToString(firstTermDouble + secondTermDouble);
+                        res.add(calcRes);
+                    }
                  }
             |
             op = <SUB>.image
             secondTerm = term()
                  {
-                    Double firstTermDouble = Double.parseDouble(firstTerm);
-                    Double secondTermDouble = Double.parseDouble(secondTerm);
-                    firstTerm = convertToString(firstTermDouble - secondTermDouble);
+                     for (int i = 0; i < firstTerm.size(); i++){
+                        Double firstTermDouble = Double.parseDouble(firstTerm.get(i));
+                        Double secondTermDouble = Double.parseDouble(secondTerm.get(i));
+                        String calcRes = convertToString(firstTermDouble - secondTermDouble);
+                        res.add(calcRes);
+                    }
                  }
             )*
              {
-                return firstTerm;
+                return res;
               }
-              | res = functionCall()
+              | funcCallRes = functionCall()
               {
+                res.add(funcCallRes);
                 return res;
               }
               |
@@ -247,12 +255,15 @@ void assignment():
                 LocalDateTime dateTime1 = LocalDateTime.parse(timeStamp1, formatter);
                 LocalDateTime dateTime2 = LocalDateTime.parse(timeStamp2, formatter);
                 Duration duration = Duration.between(dateTime1, dateTime2);
-                return Long.toString(duration.getSeconds() * -1);
+                res.add(Long.toString(duration.getSeconds() * -1));
+                return res;
               }
         }
 
                 String booleanExpression():
                 {
+                 List<String> firstTermList;
+                 List<String> secondTermList;
                 String firstTerm = "";
                 String secondTerm = "";
                 String op = "";
@@ -261,10 +272,12 @@ void assignment():
                 String timeStamp2 = "";
                 }
                 {
-                LOOKAHEAD(3) firstTerm = numberExpression()
+                LOOKAHEAD(3) firstTermList = numberExpression()
                 op = <COMP_OP>.image
-                secondTerm = numberExpression()
+                secondTermList = numberExpression()
                 {
+                    firstTerm = firstTermList.get(0);
+                    secondTerm = secondTermList.get(0);
                     Double firstTermDouble = Double.parseDouble(firstTerm);
                     Double secondTermDouble = Double.parseDouble(secondTerm);
                     switch (op) {
@@ -324,10 +337,12 @@ void assignment():
                     return res;
                 }
                 |
-                LOOKAHEAD(3) firstTerm = stringExpression()
+                LOOKAHEAD(3) firstTermList = stringExpression()
                 op = <COMP_OP>.image
-                secondTerm = stringExpression()
+                secondTermList = stringExpression()
                 {
+                    firstTerm = firstTermList.get(0);
+                    secondTerm = secondTermList.get(0);
                     switch (op) {
                         case "<":
                             res = convertToString(firstTerm.compareTo(secondTerm) < 0);
@@ -352,43 +367,117 @@ void assignment():
                 }
             }
 
-        String term():
-        {
-         String firstFactor = "";
-         String secondFactor = "";
-         String op = "";
-         String res = "";
-         } {
-            firstFactor = factor()
-            (
-            op = <MUL>.image
-            secondFactor = factor()
-             {
-                Double firstFactorDouble = Double.parseDouble(firstFactor);
-                Double secondFactorDouble = Double.parseDouble(secondFactor);
-                firstFactor = convertToString(firstFactorDouble * secondFactorDouble);
-             }
-            |
-            op = <DIV>.image
-            secondFactor = factor()
-             {
-                Double firstFactorDouble = Double.parseDouble(firstFactor);
-                Double secondFactorDouble = Double.parseDouble(secondFactor);
-                firstFactor = convertToString(firstFactorDouble / secondFactorDouble);
-            }
-            |
-            op = <MOD>.image
-            secondFactor = factor()
-             {
-                Double firstFactorDouble = Double.parseDouble(firstFactor);
-                Double secondFactorDouble = Double.parseDouble(secondFactor);
-                firstFactor = convertToString(firstFactorDouble % secondFactorDouble);
-            }
-            )*
-            {
-            return firstFactor;
-            }
-        }
+       List<String> term() :
+       {
+           String firstFactor = "";
+           String secondFactor = "";
+           String op = "";
+           List<String> res = new ArrayList<String>();
+       }
+       {
+           firstFactor = factor()
+           {
+              if (firstFactor.equals("< VARIABLE >") && currentLoop != null)
+              {
+                  for (int i = currentLoop.loopStart; i <= currentLoop.loopEnd; i++) {
+                     res.add(firstFactor);
+                 }
+              }
+              else
+              {
+                  res.add(firstFactor);
+              }
+           }
+           (
+               op = <MUL>.image
+               secondFactor = factor()
+               {
+                   Double firstFactorDouble = 0.0;
+                   Double secondFactorDouble = 0.0;
+
+                   if (firstFactor.equals("< VARIABLE >") && !secondFactor.equals("< VARIABLE >") && currentLoop != null) {
+                       secondFactorDouble = Double.parseDouble(secondFactor);
+                       for (int i = currentLoop.loopStart; i <= currentLoop.loopEnd; i++) {
+                           res.add(convertToString((Double.valueOf(i)) * secondFactorDouble));
+                       }
+                   }
+                   else if (!firstFactor.equals("< VARIABLE >") && secondFactor.equals("< VARIABLE >") && currentLoop != null) {
+                       firstFactorDouble = Double.parseDouble(firstFactor);
+                       for (int i = currentLoop.loopStart; i <= currentLoop.loopEnd; i++) {
+                           res.add(convertToString(firstFactorDouble * (Double.valueOf(i))));
+                       }
+                   }
+                   else if (firstFactor.equals("< VARIABLE >") && secondFactor.equals("< VARIABLE >") && currentLoop != null) {
+                      for (int i = currentLoop.loopStart; i <= currentLoop.loopEnd; i++) {
+                          res.add(convertToString( (Double.valueOf(i)) * (Double.valueOf(i)) ));
+                      }
+                   }
+                   else if (!firstFactor.equals("< VARIABLE >") && !secondFactor.equals("< VARIABLE >")) {
+                       res.add(convertToString(firstFactorDouble * secondFactorDouble));
+                   }
+               }
+               |
+               op = <DIV>.image
+               secondFactor = factor()
+               {
+                       Double firstFactorDouble = 0.0;
+                       Double secondFactorDouble = 0.0;
+
+                       if (firstFactor.equals("< VARIABLE >") && !secondFactor.equals("< VARIABLE >") && currentLoop != null) {
+                           secondFactorDouble = Double.valueOf(secondFactor);
+                           for (int i = currentLoop.loopStart; i <= currentLoop.loopEnd; i++) {
+                               res.add(convertToString((Double.valueOf(i)) / secondFactorDouble));
+                           }
+                       }
+                       else if (!firstFactor.equals("< VARIABLE >") && secondFactor.equals("< VARIABLE >") && currentLoop != null) {
+                           firstFactorDouble = Double.valueOf(firstFactor);
+                           for (int i = currentLoop.loopStart; i <= currentLoop.loopEnd; i++) {
+                               res.add(convertToString(firstFactorDouble / (Double.valueOf(i))));
+                           }
+                       }
+                       else if (firstFactor.equals("< VARIABLE >") && secondFactor.equals("< VARIABLE >") && currentLoop != null) {
+                          for (int i = currentLoop.loopStart; i <= currentLoop.loopEnd; i++) {
+                              res.add(convertToString( (Double.valueOf(i)) / (Double.valueOf(i)) ));
+                          }
+                       }
+                       else if (!firstFactor.equals("< VARIABLE >") && !secondFactor.equals("< VARIABLE >")) {
+                           res.add(convertToString(firstFactorDouble / secondFactorDouble));
+                       }
+               }
+               |
+               op = <MOD>.image
+               secondFactor = factor()
+               {
+                 Double firstFactorDouble = 0.0;
+                  Double secondFactorDouble = 0.0;
+
+                  if (firstFactor.equals("< VARIABLE >") && !secondFactor.equals("< VARIABLE >") && currentLoop != null) {
+                      secondFactorDouble = Double.valueOf(secondFactor);
+                      for (int i = currentLoop.loopStart; i <= currentLoop.loopEnd; i++) {
+                          res.add(convertToString((Double.valueOf(i)) % secondFactorDouble));
+                      }
+                  }
+                  else if (!firstFactor.equals("< VARIABLE >") && secondFactor.equals("< VARIABLE >") && currentLoop != null) {
+                      firstFactorDouble = Double.valueOf(firstFactor);
+                      for (int i = currentLoop.loopStart; i <= currentLoop.loopEnd; i++) {
+                          res.add(convertToString(firstFactorDouble % (Double.valueOf(i))));
+                      }
+                  }
+                  else if (firstFactor.equals("< VARIABLE >") && secondFactor.equals("< VARIABLE >") && currentLoop != null) {
+                     for (int i = currentLoop.loopStart; i <= currentLoop.loopEnd; i++) {
+                         res.add(convertToString( (Double.valueOf(i)) % (Double.valueOf(i)) ));
+                     }
+                  }
+                  else if (!firstFactor.equals("< VARIABLE >") && !secondFactor.equals("< VARIABLE >")) {
+                      res.add(convertToString(firstFactorDouble % secondFactorDouble));
+                  }
+               }
+           )*
+           {
+               return res;
+           }
+       }
+
 
         String factor():
         {
@@ -416,8 +505,8 @@ void assignment():
             |
             literal = <VARIABLE>.image
             {
-                if(isInForLoop)
-                    return String.valueOf(currentLoop.currentLoopVar);
+                if(currentLoop != null)
+                    return literal;
                 return null;
             }
         }
@@ -454,13 +543,15 @@ void assignment():
         {
          String timestamp = "";
          String op = "";
+         List<String> numberList;
          String number = "";
 } {
             LOOKAHEAD(3)
             timestamp = <TIMESTAMP_LITERAL>.image
              op = <ADD>.image
-            number = numberExpression()
+            numberList = numberExpression()
             {
+                number = numberList.get(0);
                 timestamp = timestamp.replace("{", "");
                 timestamp = timestamp.replace("}", "");
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -472,8 +563,9 @@ void assignment():
              LOOKAHEAD(3)
              timestamp = <TIMESTAMP_LITERAL>.image
               op = <SUB>.image
-             number = numberExpression()
+             numberList = numberExpression()
              {
+                 number = numberExpression().get(0);
                 timestamp = timestamp.replace("{", "");
                 timestamp = timestamp.replace("}", "");
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -483,14 +575,14 @@ void assignment():
              }
         }
 
-        String stringExpression():
+        List<String> stringExpression():
         {
             String currentLiteral = "";
             String ampresandSign = "";
             String concatLiteral = "";
-            String cellRef = "";
-            String stringExpr = "";
-            String cellRefValue = "";
+            List<String> cellRefList;
+            List<String> stringExprList = new ArrayList<String>();
+            List<String> cellRefValueList = new ArrayList<String>();
 } {
             currentLiteral = <STRING_LITERAL>.image
              (
@@ -504,25 +596,30 @@ void assignment():
               )*
               {
                 currentLiteral = currentLiteral.replace("\'", "");
-                return currentLiteral;
+                cellRefValueList.add(currentLiteral);
+                return cellRefValueList;
                 }
             |
-            cellRef = cellReference()
+            cellRefList = cellReference()
             concatLiteral = <CONCAT>.image
-            stringExpr = stringExpression()
+            stringExprList = stringExpression()
             {
-                cellRefValue = cellReferenceValues.get(cellRef);
-                cellRefValue = cellRefValue + " " + stringExpr;
+                if(currentLoop != null)
+                {
+                    for (int i = 0; i < cellRefList.size(); i++)
+                    {
+                        String cellRef = cellRefList.get(i);
+                        String cellRefValue = cellReferenceValues.get(cellRef);
+                        cellRefValue = cellRefValue + " " + (i >= stringExprList.size() ? stringExprList.get(stringExprList.size() - 1) : stringExprList.get(i));
+                        cellRefValue = cellRefValue.replace("\'", "");
+                        cellRefValueList.add(cellRefValue);
+                    }
+                }
+
+                String cellRefValue = cellReferenceValues.get(0);
+                cellRefValue = cellRefValue + " " + stringExprList.get(0);
                 cellRefValue = cellRefValue.replace("\'", "");
-                return cellRefValue;
+                cellRefValueList.add(cellRefValue);
+                return cellRefValueList;
             }
         }
-
-
-
-
-
-
-
-
-
