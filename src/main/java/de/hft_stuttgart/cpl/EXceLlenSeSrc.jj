@@ -17,6 +17,15 @@ import java.util.Map;
 public class EXceLlenSe
 {
     private static Map<String, String> cellReferenceValues;
+    private static int currentLoopVariableValue = 0;
+    private static Boolean isInForLoop = false;
+    private static CurrentLoop currentLoop = null;
+
+    private class CurrentLoop{
+        public int loopStart;
+        public int loopEnd;
+        public int currentLoopVar;
+    }
 
     private static String convertToString(double value) {
         if (value == (long) value) {
@@ -112,54 +121,81 @@ TOKEN:
 }
         }
 
-        void assignment():
-        {
-            String reference;
-            String expression;
-            Token equal_sign;
-                } {
-          {
-            reference = "";
-            expression = "";
-           }
-            reference = cellReference()
-            <EQ>
-            expression = expression()
-            [ <FORMATTED> stringExpression() ]
+void assignment():
+{
+    String reference;
+    String expression;
+    Token equal_sign;
+}
+{
+    {
+        reference = "";
+        expression = "";
+    }
+    {
+        if (currentLoop != null) {
+            for (int i = currentLoop.loopStart; i < currentLoop.loopEnd; i++) {
+                currentLoop.currentLoopVar = i;
+                reference = cellReference();
+                <EQ>;
+                expression = expression();
+                [ <FORMATTED> stringExpression() ];
+                {
+                    cellReferenceValues.put(reference, expression);
+                }
+            }
+        } else {
+            reference = cellReference();
+            <EQ>;
+            expression = expression();
+            [ <FORMATTED> stringExpression() ];
             {
                 cellReferenceValues.put(reference, expression);
             }
         }
+    }
+}
+
 
         void forLoop():
         {} {
-            <FOR> <VARIABLE> <FROM> expression() <TO> expression() <DO> assignment() <END>
+            {
+                currentLoop = new CurrentLoop();
+            }
+            <FOR> <VARIABLE> <FROM> {currentLoop.loopStart = expression();} <TO> {currentLoop.loopEnd = expression();} <DO>
+            {
+                currentLoopVariableValue = currentLoop.loopStart;
+                assignment();
+            }
+            <END>
+            {
+                currentLoop = null;
+            }
         }
 
         String expression():
         {
             String output = "";
         } {
-
-             LOOKAHEAD(12) output = booleanExpression()
-              {
-                return output;
-              }
-              |
-             LOOKAHEAD(6) output = numberExpression()
-                {
+                 LOOKAHEAD(12) output = booleanExpression()
+                  {
                     return output;
-                }
-              |
-             LOOKAHEAD(6) output = timestampExpression()
-             {
-                return output;
-             }
-             |
-           LOOKAHEAD(12) output = stringExpression()
-             {
-                 return output;
-             }
+                  }
+                  |
+                 LOOKAHEAD(6) output = numberExpression()
+                    {
+                        return output;
+                    }
+                  |
+                 LOOKAHEAD(6) output = timestampExpression()
+                 {
+                    return output;
+                 }
+                 |
+               LOOKAHEAD(12) output = stringExpression()
+                 {
+                     return output;
+                 }
         }
 
 
@@ -376,6 +412,13 @@ TOKEN:
             literal = <FLOAT_LITERAL_3>.image
             {
                 return literal;
+            }
+            |
+            literal = <VARIABLE>.image
+            {
+                if(isInForLoop)
+                    return String.valueOf(currentLoop.currentLoopVar);
+                return null;
             }
         }
 
