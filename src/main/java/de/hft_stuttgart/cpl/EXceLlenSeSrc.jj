@@ -22,6 +22,7 @@ public class EXceLlenSe
 {
     private static Map<String, String> cellReferenceValues;
     private static CurrentLoop currentLoop = null;
+    private static Boolean assignmentForLoopStarted = false;
 
     private class CurrentLoop{
         public int loopStart;
@@ -115,12 +116,31 @@ TOKEN:
             "R"
             exprRow = numberExpression()
             {
-                 if(currentLoop != null)
+                 if(currentLoop != null && exprColumn.size() != 1 && exprRow.size() != 1)
                  {
-                     for (int i = currentLoop.loopStart; i < currentLoop.loopEnd; i++)
+                     if(exprColumn.size() == 1)
+                     {
+                         for (int i = 0; i < exprRow.size(); i++)
+                           {
+                               String resultCell = "C" + exprColumn.get(0) + "R" + exprRow.get(i);
+                               res.add(resultCell);
+                           }
+                     }
+                      else if(exprRow.size() == 1)
                       {
-                          String resultCell = "C" + exprColumn.get(i) + "R" + exprRow.get(i);
-                          res.add(resultCell);
+                          for (int i = 0; i < exprColumn.size(); i++)
+                             {
+                                 String resultCell = "C" + exprColumn.get(i) + "R" + exprRow.get(0);
+                                 res.add(resultCell);
+                             }
+                      }
+                      else
+                      {
+                          for (int i = 0; i < exprColumn.size(); i++)
+                          {
+                              String resultCell = "C" + exprColumn.get(i) + "R" + exprRow.get(i);
+                              res.add(resultCell);
+                          }
                       }
 
                  }
@@ -156,9 +176,11 @@ void assignment():
         {} {
             {
                 currentLoop = new CurrentLoop();
+                assignmentForLoopStarted = false;
             }
             <FOR> <VARIABLE> <FROM> {currentLoop.loopStart = Integer.parseInt(expression().get(0));} <TO> {currentLoop.loopEnd = Integer.parseInt(expression().get(0));} <DO>
             {
+                assignmentForLoopStarted = true;
                 assignment();
             }
             <END>
@@ -183,9 +205,8 @@ void assignment():
                         return outputList;
                     }
                   |
-                 LOOKAHEAD(6) output = timestampExpression()
+                 LOOKAHEAD(6) outputList = timestampExpression()
                  {
-                    outputList.add(output);
                     return outputList;
                  }
                  |
@@ -372,292 +393,184 @@ void assignment():
 
        List<String> term() :
        {
-           String firstFactor = "";
-           String secondFactor = "";
+           List<String> firstFactor = new ArrayList<String>();
+           List<String> secondFactor = new ArrayList<String>();
            String op = "";
-           List<String> res = new ArrayList<String>();
        }
        {
            firstFactor = factor()
-           {
-              if (firstFactor.equals("< VARIABLE >") && currentLoop != null)
-              {
-                  for (int i = currentLoop.loopStart; i <= currentLoop.loopEnd; i++) {
-                     res.add(firstFactor);
-                 }
-              }
-              else
-              {
-                  res.add(firstFactor);
-              }
-           }
            (
                op = <MUL>.image
                secondFactor = factor()
                {
                       Double firstFactorDouble = 0.0;
                       Double secondFactorDouble = 0.0;
-
-                      if (firstFactor.equals("< VARIABLE >") && !secondFactor.equals("< VARIABLE >") && currentLoop != null) {
-                          secondFactorDouble = Double.parseDouble(secondFactor);
-                          if(res.size() == 1) //can't be with size 0 since it's already was initialized
+                      if(secondFactor.size() == 1)
+                      {
+                          secondFactorDouble = Double.valueOf(secondFactor.get(0));
+                          for (int i = 0; i < firstFactor.size(); i++)
                           {
-                              res.set(0, convertToString(firstFactorDouble / Double.valueOf(res.get(0))));
-                              for (int i = currentLoop.loopStart; i < currentLoop.loopEnd; i++) { //since 1 elements is already there, we have to not for loop all the range
-                                 res.add(convertToString((Double.valueOf(i)) * secondFactorDouble));
-                              }
-                          }
-                          else
-                          {
-                               for (int i = 0; i < res.size(); i++) {
-                                   res.set(i, convertToString((Double.valueOf(res.get(i))) * secondFactorDouble));
-                               }
+                              firstFactorDouble = Double.valueOf(firstFactor.get(i));
+                              firstFactor.set(i, convertToString(firstFactorDouble * secondFactorDouble));
                           }
                       }
-                      else if (!firstFactor.equals("< VARIABLE >") && secondFactor.equals("< VARIABLE >") && currentLoop != null) {
-
-                             firstFactorDouble = Double.parseDouble(firstFactor);
-                             if(res.size() == 1) //can't be with size 0 since it's already was initialized
-                             {
-                                 res.set(0, convertToString(firstFactorDouble % Double.valueOf(res.get(0))));
-                                 for (int i = currentLoop.loopStart; i < currentLoop.loopEnd; i++) { //since 1 elements is already there, we have to not for loop all the range
-                                    res.add(convertToString(firstFactorDouble * (Double.valueOf(i))));;
-                                 }
-                             }
-                             else
-                             {
-                                  for (int i = 0; i < res.size(); i++) {
-                                      res.set(i,  convertToString(firstFactorDouble * (Double.valueOf(res.get(i)))) );
-                                  }
-                             }
+                      else
+                      {
+                          for (int i = 0; i < firstFactor.size(); i++)
+                            {
+                                firstFactorDouble = Double.valueOf(firstFactor.get(i));
+                                secondFactorDouble = Double.valueOf(secondFactor.get(i));
+                                firstFactor.set(i, convertToString(firstFactorDouble * secondFactorDouble));
+                            }
                       }
-                      else if (firstFactor.equals("< VARIABLE >") && secondFactor.equals("< VARIABLE >") && currentLoop != null) {
-                          if(res.size() == 1) //can't be with size 0 since it's already was initialized
-                          {
-                              res.set(0, convertToString(firstFactorDouble % Double.valueOf(res.get(0))));
-                              for (int i = currentLoop.loopStart; i < currentLoop.loopEnd; i++) { //since 1 elements is already there, we have to not for loop all the range
-                                 res.add(convertToString( (Double.valueOf(i)) * (Double.valueOf(i)) ));;
-                              }
-                          }
-                          else
-                          {
-                               for (int i = 0; i < res.size(); i++) {
-                                   res.set(i,  convertToString( (Double.valueOf(i)) * (Double.valueOf(i)) ));
-                               }
-                          }
-                      }
-                      else if (!firstFactor.equals("< VARIABLE >") && !secondFactor.equals("< VARIABLE >")) {  // it still can be a loop
-
-                          firstFactorDouble = Double.parseDouble(firstFactor);
-                          secondFactorDouble = Double.parseDouble(secondFactor);
-                           if(res.size() == 1 && currentLoop != null) //can't be with size 0 since it's already was initialized
-                           {
-                               res.set(0, convertToString(firstFactorDouble % Double.valueOf(res.get(0))));
-                               for (int i = currentLoop.loopStart; i < currentLoop.loopEnd; i++) { //since 1 elements is already there, we have to not for loop all the range
-                                  res.add(convertToString( (Double.valueOf(res.get(i))) * secondFactorDouble ));;
-                               }
-                           }
-                           else if(res.size() == 1 && currentLoop == null){ // not a loop
-                               res.set(0, convertToString(Double.valueOf(firstFactorDouble) * (Double.valueOf(secondFactorDouble) )));
-                           }
-                           else
-                           {
-                                for (int i = 0; i < res.size(); i++) {
-                                    res.set(i, convertToString( (Double.valueOf(res.get(i))) * secondFactorDouble ) );
-                                }
-                           }
-               }
                }
                |
                op = <DIV>.image
                secondFactor = factor()
                {
-                        Double firstFactorDouble = 0.0;
-                       Double secondFactorDouble = 0.0;
-
-                       if (firstFactor.equals("< VARIABLE >") && !secondFactor.equals("< VARIABLE >") && currentLoop != null) {
-                           secondFactorDouble = Double.parseDouble(secondFactor);
-                           if(res.size() == 1) //can't be with size 0 since it's already was initialized
-                           {
-                               res.set(0, convertToString(firstFactorDouble / Double.valueOf(res.get(0))));
-                               for (int i = currentLoop.loopStart; i < currentLoop.loopEnd; i++) { //since 1 elements is already there, we have to not for loop all the range
-                                  res.add(convertToString((Double.valueOf(i)) / secondFactorDouble));
-                               }
-                           }
-                           else
-                           {
-                                for (int i = 0; i < res.size(); i++) {
-                                    res.set(i, convertToString((Double.valueOf(res.get(i))) / secondFactorDouble));
-                                }
-                           }
+                 Double firstFactorDouble = 0.0;
+                 Double secondFactorDouble = 0.0;
+                 if(secondFactor.size() == 1)
+                 {
+                     secondFactorDouble = Double.valueOf(secondFactor.get(0));
+                     for (int i = 0; i < firstFactor.size(); i++)
+                     {
+                         firstFactorDouble = Double.valueOf(firstFactor.get(i));
+                         firstFactor.set(i, convertToString(firstFactorDouble / secondFactorDouble));
+                     }
+                 }
+                 else
+                 {
+                     for (int i = 0; i < firstFactor.size(); i++)
+                       {
+                           firstFactorDouble = Double.valueOf(firstFactor.get(i));
+                           secondFactorDouble = Double.valueOf(secondFactor.get(i));
+                           firstFactor.set(i, convertToString(firstFactorDouble / secondFactorDouble));
                        }
-                       else if (!firstFactor.equals("< VARIABLE >") && secondFactor.equals("< VARIABLE >") && currentLoop != null) {
-
-                              firstFactorDouble = Double.parseDouble(firstFactor);
-                              if(res.size() == 1) //can't be with size 0 since it's already was initialized
-                              {
-                                  res.set(0, convertToString(firstFactorDouble % Double.valueOf(res.get(0))));
-                                  for (int i = currentLoop.loopStart; i < currentLoop.loopEnd; i++) { //since 1 elements is already there, we have to not for loop all the range
-                                     res.add(convertToString(firstFactorDouble / (Double.valueOf(i))));;
-                                  }
-                              }
-                              else
-                              {
-                                   for (int i = 0; i < res.size(); i++) {
-                                       res.set(i,  convertToString(firstFactorDouble / (Double.valueOf(res.get(i)))) );
-                                   }
-                              }
-                       }
-                       else if (firstFactor.equals("< VARIABLE >") && secondFactor.equals("< VARIABLE >") && currentLoop != null) {
-                           if(res.size() == 1) //can't be with size 0 since it's already was initialized
-                           {
-                               res.set(0, convertToString(firstFactorDouble % Double.valueOf(res.get(0))));
-                               for (int i = currentLoop.loopStart; i < currentLoop.loopEnd; i++) { //since 1 elements is already there, we have to not for loop all the range
-                                  res.add(convertToString( (Double.valueOf(i)) / (Double.valueOf(i)) ));;
-                               }
-                           }
-                           else
-                           {
-                                for (int i = 0; i < res.size(); i++) {
-                                    res.set(i,  convertToString( (Double.valueOf(i)) / (Double.valueOf(i)) ));
-                                }
-                           }
-                       }
-                       else if (!firstFactor.equals("< VARIABLE >") && !secondFactor.equals("< VARIABLE >")) {  // it still can be a loop
-
-                           firstFactorDouble = Double.parseDouble(firstFactor);
-                           secondFactorDouble = Double.parseDouble(secondFactor);
-                          if(res.size() == 1 && currentLoop != null) //can't be with size 0 since it's already was initialized
-                          {
-                              res.set(0, convertToString(firstFactorDouble % Double.valueOf(res.get(0))));
-                              for (int i = currentLoop.loopStart; i < currentLoop.loopEnd; i++) { //since 1 elements is already there, we have to not for loop all the range
-                                 res.add(convertToString( (Double.valueOf(res.get(i))) / secondFactorDouble ));;
-                              }
-                          }
-                          else if(res.size() == 1 && currentLoop == null){ // not a loop
-                              res.set(0, convertToString(Double.valueOf(firstFactorDouble) / (Double.valueOf(secondFactorDouble) )));
-                          }
-                          else
-                          {
-                               for (int i = 0; i < res.size(); i++) {
-                                   res.set(i, convertToString( (Double.valueOf(res.get(i))) / secondFactorDouble ) );
-                               }
-                          }
-               }
+                 }
                }
                |
                op = <MOD>.image
                secondFactor = factor()
                {
                 Double firstFactorDouble = 0.0;
-                      Double secondFactorDouble = 0.0;
+                Double secondFactorDouble = 0.0;
+                if(secondFactor.size() == 1)
+                {
+                    secondFactorDouble = Double.valueOf(secondFactor.get(0));
+                    for (int i = 0; i < firstFactor.size(); i++)
+                    {
+                        firstFactorDouble = Double.valueOf(firstFactor.get(i));
+                        firstFactor.set(i, convertToString(firstFactorDouble % secondFactorDouble));
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < firstFactor.size(); i++)
+                      {
+                          firstFactorDouble = Double.valueOf(firstFactor.get(i));
+                          secondFactorDouble = Double.valueOf(secondFactor.get(i));
+                          firstFactor.set(i, convertToString(firstFactorDouble % secondFactorDouble));
+                      }
+                }
 
-                      if (firstFactor.equals("< VARIABLE >") && !secondFactor.equals("< VARIABLE >") && currentLoop != null) {
-                          secondFactorDouble = Double.parseDouble(secondFactor);
-                          if(res.size() == 1) //can't be with size 0 since it's already was initialized
-                          {
-                              res.set(0, convertToString(firstFactorDouble % Double.valueOf(res.get(0))));
-                              for (int i = currentLoop.loopStart; i < currentLoop.loopEnd; i++) { //since 1 elements is already there, we have to not for loop all the range
-                                 res.add(convertToString((Double.valueOf(i)) % secondFactorDouble));
-                              }
-                          }
-                          else
-                          {
-                               for (int i = 0; i < res.size(); i++) {
-                                   res.set(i, convertToString((Double.valueOf(res.get(i))) % secondFactorDouble));
-                               }
-                          }
-                      }
-                      else if (!firstFactor.equals("< VARIABLE >") && secondFactor.equals("< VARIABLE >") && currentLoop != null) {
-
-                             firstFactorDouble = Double.parseDouble(firstFactor);
-                             if(res.size() == 1) //can't be with size 0 since it's already was initialized
-                             {
-                                 res.set(0, convertToString(firstFactorDouble % Double.valueOf(res.get(0))));
-                                 for (int i = currentLoop.loopStart; i < currentLoop.loopEnd; i++) { //since 1 elements is already there, we have to not for loop all the range
-                                    res.add(convertToString(firstFactorDouble % (Double.valueOf(i))));;
-                                 }
-                             }
-                             else
-                             {
-                                  for (int i = 0; i < res.size(); i++) {
-                                      res.set(i,  convertToString(firstFactorDouble % (Double.valueOf(res.get(i)))) );
-                                  }
-                             }
-                      }
-                      else if (firstFactor.equals("< VARIABLE >") && secondFactor.equals("< VARIABLE >") && currentLoop != null) {
-                          if(res.size() == 1) //can't be with size 0 since it's already was initialized
-                          {
-                              res.set(0, convertToString(firstFactorDouble % Double.valueOf(res.get(0))));
-                              for (int i = currentLoop.loopStart; i < currentLoop.loopEnd; i++) { //since 1 elements is already there, we have to not for loop all the range
-                                 res.add(convertToString( (Double.valueOf(i)) % (Double.valueOf(i)) ));;
-                              }
-                          }
-                          else
-                          {
-                               for (int i = 0; i < res.size(); i++) {
-                                   res.set(i,  convertToString( (Double.valueOf(i)) % (Double.valueOf(i)) ));
-                               }
-                          }
-                      }
-                      else if (!firstFactor.equals("< VARIABLE >") && !secondFactor.equals("< VARIABLE >")) {  // it still can be a loop
-
-                          firstFactorDouble = Double.parseDouble(firstFactor);
-                          secondFactorDouble = Double.parseDouble(secondFactor);
-                           if(res.size() == 1 && currentLoop != null) //can't be with size 0 since it's already was initialized
-                           {
-                               res.set(0, convertToString(firstFactorDouble % Double.valueOf(res.get(0))));
-                               for (int i = currentLoop.loopStart; i < currentLoop.loopEnd; i++) { //since 1 elements is already there, we have to not for loop all the range
-                                  res.add(convertToString( (Double.valueOf(res.get(i))) % secondFactorDouble ));;
-                               }
-                           }
-                           else if(res.size() == 1 && currentLoop == null){ // not a loop
-                               res.set(0, convertToString(Double.valueOf(firstFactorDouble) % (Double.valueOf(secondFactorDouble) )));
-                           }
-                           else
-                           {
-                                for (int i = 0; i < res.size(); i++) {
-                                    res.set(i, convertToString( (Double.valueOf(res.get(i))) % secondFactorDouble ) );
-                                }
-                           }
-                      }
-               }
+                }
            )*
            {
-               return res;
+               return firstFactor;
            }
        }
 
 
-        String factor():
+        List<String> factor():
         {
-         String literal = "";
+         List<String> res = new ArrayList<>();
+          String literal = "";
          } {
             literal = <DECIMAL_LITERAL>.image
              {
-                return literal;
+                if(currentLoop != null){
+                    if(!assignmentForLoopStarted && currentLoop != null)
+                        res.add(literal);
+                    for (int i = currentLoop.loopStart; i <= currentLoop.loopEnd; i++)
+                    {
+                        res.add(literal);
+                    }
+                }
+                else
+                {
+                    res.add(literal);
+                }
+                return res;
              }
             |
             literal = <FLOAT_LITERAL_1>.image
              {
-                 return literal;
+                    if(!assignmentForLoopStarted && currentLoop != null)
+                        res.add(literal);
+                if(currentLoop != null){
+                    for (int i = currentLoop.loopStart; i <= currentLoop.loopEnd; i++)
+                    {
+                        res.add(literal);
+                    }
+                }
+                else
+                {
+                    res.add(literal);
+                }
+                return res;
              }
             |
             literal = <FLOAT_LITERAL_2>.image
              {
-                 return literal;
+                    if(!assignmentForLoopStarted && currentLoop != null)
+                        res.add(literal);
+                if(currentLoop != null){
+                    for (int i = currentLoop.loopStart; i <= currentLoop.loopEnd; i++)
+                    {
+                        res.add(literal);
+                    }
+                }
+                else
+                {
+                    res.add(literal);
+                }
+                return res;
              }
             |
             literal = <FLOAT_LITERAL_3>.image
             {
-                return literal;
+                    if(!assignmentForLoopStarted && currentLoop != null)
+                        res.add(literal);
+                if(currentLoop != null){
+                    for (int i = currentLoop.loopStart; i <= currentLoop.loopEnd; i++)
+                    {
+                        res.add(literal);
+                    }
+                }
+                else
+                {
+                    res.add(literal);
+                }
+                return res;
             }
             |
             literal = <VARIABLE>.image
             {
-                if(currentLoop != null)
-                    return literal;
-                return null;
+                    if(!assignmentForLoopStarted && currentLoop != null)
+                        res.add(literal);
+                if(currentLoop != null){
+                    Integer toAdd = currentLoop.loopStart;
+                    for (int i = currentLoop.loopStart; i <= currentLoop.loopEnd; i++)
+                    {
+                        res.add(String.valueOf(toAdd++));
+                    }
+                }
+                else
+                {
+                    res.add(literal);
+                }
+                return res;
             }
         }
 
@@ -689,7 +602,7 @@ void assignment():
             }
         }
 
-        String timestampExpression():
+        List<String> timestampExpression():
         {
          String timestamp = "";
          String op = "";
@@ -701,27 +614,34 @@ void assignment():
              op = <ADD>.image
             numberList = numberExpression()
             {
-                number = numberList.get(0);
                 timestamp = timestamp.replace("{", "");
                 timestamp = timestamp.replace("}", "");
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                LocalDateTime dateTime = LocalDateTime.parse(timestamp, formatter);
-                dateTime = dateTime.plusSeconds(Long.parseLong(number));
-                return dateTime.toString();
+                for (int i = 0; i < numberList.size(); i++ )
+                {
+                    number = numberList.get(i);
+                    LocalDateTime dateTime = LocalDateTime.parse(timestamp, formatter);
+                    dateTime = dateTime.plusSeconds(Long.parseLong(number));
+                    numberList.set(i, dateTime.toString());
+                }
+                return numberList;
             }
               |
-             LOOKAHEAD(3)
-             timestamp = <TIMESTAMP_LITERAL>.image
+             LOOKAHEAD(3) timestamp = <TIMESTAMP_LITERAL>.image
               op = <SUB>.image
              numberList = numberExpression()
              {
-                 number = numberExpression().get(0);
                 timestamp = timestamp.replace("{", "");
                 timestamp = timestamp.replace("}", "");
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                LocalDateTime dateTime = LocalDateTime.parse(timestamp, formatter);
-                dateTime = dateTime.minusSeconds(Long.parseLong(number));
-                return dateTime.toString();
+                for (int i = 0; i < numberList.size(); i++ )
+                {
+                    number = numberList.get(i);
+                    LocalDateTime dateTime = LocalDateTime.parse(timestamp, formatter);
+                    dateTime = dateTime.minusSeconds(Long.parseLong(number));
+                    numberList.set(i, dateTime.toString());
+                }
+                return numberList;
              }
         }
 
