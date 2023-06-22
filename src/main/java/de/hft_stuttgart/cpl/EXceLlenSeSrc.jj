@@ -653,6 +653,9 @@ void assignment():
             List<String> cellRefValueList = new ArrayList<String>();
 } {
             currentLiteral = <STRING_LITERAL>.image
+            {
+                cellRefValueList.add(currentLiteral);
+            }
              (
               ampresandSign = <CONCAT>.image
               concatLiteral = <STRING_LITERAL>.image
@@ -664,35 +667,30 @@ void assignment():
               )*
               {
                 currentLiteral = currentLiteral.replace("\'", "");
-                cellRefValueList.add(currentLiteral);
+                if(currentLoop != null)
+                {
+                    for (int i = currentLoop.loopStart; i <= currentLoop.loopEnd; i++)
+                        cellRefValueList.add(currentLiteral);
+                }
+                else
+                {
+                    cellRefValueList.set(0, currentLiteral);
+                }
                 return cellRefValueList;
                 }
             |
             cellRefList = cellReference()
-            concatLiteral =   <CONCAT>.image
+            concatLiteral = <CONCAT>.image
             stringExprList = stringExpression()
             {
-                if(currentLoop != null)
+                for (int i = 0; i < cellRefList.size(); i++)
                 {
-                    for (int i = 0; i < cellRefList.size(); i++)
-                    {
-                        String cellRef = cellRefList.get(i);
-                        String cellRefValue = cellReferenceValues.get(cellRef);
-                        cellRefValue = cellRefValue + " " + stringExprList.get(i);
-                        cellRefValue = cellRefValue.replace("\'", "");
-                        cellRefValueList.add(cellRefValue);
-                    }
-                }
-                else
-                {
-                    String cellRef = cellRefList.get(0);
+                    String cellRef = cellRefList.get(i);
                     String cellRefValue = cellReferenceValues.get(cellRef);
-                    cellRefValue = cellRefValue + " " + stringExprList.get(0);
+                    cellRefValue = cellRefValue + " " + stringExprList.get(i);
                     cellRefValue = cellRefValue.replace("\'", "");
-                    System.out.println("Concated string: " + cellRefValue);
-                    cellRefValueList.add(cellRefValue);
+                    cellRefValueList.add(i, cellRefValue);
                 }
-
                 return cellRefValueList;
             }
         }
