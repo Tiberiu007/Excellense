@@ -164,8 +164,6 @@ void assignment():
             expressionValues = expression()
             [ <FORMATTED> stringExpression() ]
             {
-                System.out.println("Current cell references to be assigned: " + Arrays.toString(references.toArray()));
-                System.out.println("Current values that will be assigned: " + Arrays.toString(expressionValues.toArray()));
                 for (int i = 0; i < references.size(); i++)
                     cellReferenceValues.put(references.get(i), expressionValues.get(i));
             }
