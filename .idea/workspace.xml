@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="ba085841-b247-44bd-9ce3-9b0b820b7f30" name="Changes" comment="final version for sure xd">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Exercise.md" beforeDir="false" afterPath="$PROJECT_DIR$/Exercise.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/de/hft_stuttgart/cpl/EXceLlenSe.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/de/hft_stuttgart/cpl/EXceLlenSeConstants.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/de/hft_stuttgart/cpl/EXceLlenSeSrc.jj.zip" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/de/hft_stuttgart/cpl/EXceLlenSeTokenManager.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/de/hft_stuttgart/cpl/ParseException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/de/hft_stuttgart/cpl/SimpleCharStream.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/de/hft_stuttgart/cpl/Token.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/de/hft_stuttgart/cpl/TokenMgrError.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/de/hft_stuttgart/cpl/EXceLlenSe$JJCalls.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/de/hft_stuttgart/cpl/EXceLlenSe$LookaheadSuccess.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/de/hft_stuttgart/cpl/EXceLlenSe.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/de/hft_stuttgart/cpl/EXceLlenSeConstants.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/de/hft_stuttgart/cpl/EXceLlenSeTokenManager.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/de/hft_stuttgart/cpl/ParseException.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/de/hft_stuttgart/cpl/SimpleCharStream.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/de/hft_stuttgart/cpl/Token.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/de/hft_stuttgart/cpl/TokenMgrError.class" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="forloop" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="useMavenConfig" value="true" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectId" id="2RZDzZOqpZsQxRZJVvzy4lcMBo2" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;
+  }
+}</component>
+  <component name="RunManager">
+    <configuration name="EXceLlenSe" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="de.hft_stuttgart.cpl.EXceLlenSe" />
+      <module name="EXceLlenSe" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="de.hft_stuttgart.cpl.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.EXceLlenSe" />
+        <item itemvalue="Application.EXceLlenSe" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ba085841-b247-44bd-9ce3-9b0b820b7f30" name="Changes" comment="" />
+      <created>1687448975469</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1687448975469</updated>
+    </task>
+    <task id="LOCAL-00001" summary="changed">
+      <created>1687466303705</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1687466303705</updated>
+    </task>
+    <task id="LOCAL-00002" summary="final version">
+      <created>1687473360735</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1687473360735</updated>
+    </task>
+    <task id="LOCAL-00003" summary="final version">
+      <created>1687473551043</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1687473551043</updated>
+    </task>
+    <task id="LOCAL-00004" summary="final version for sure xd">
+      <created>1687476025716</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1687476025716</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="changed" />
+    <MESSAGE value="final version" />
+    <MESSAGE value="final version for sure xd" />
+    <option name="LAST_COMMIT_MESSAGE" value="final version for sure xd" />
+  </component>
+</project>
